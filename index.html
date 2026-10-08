@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassPortal - Sistem & Mading Kelas Digital Realtime</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .tab-active {
+            border-bottom: 3px solid #4f46e5;
+            color: #4f46e5;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen font-sans flex flex-col antialiased">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 shadow-sm transition-all">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand Title & Identity -->
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-tr from-brand-600 to-indigo-600 p-2.5 rounded-2xl text-white shadow-md shadow-brand-500/20">
+                        <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h1 id="class-name-display" class="text-lg font-extrabold text-slate-900 tracking-tight leading-tight">ClassPortal</h1>
+                            <span id="cloud-sync-status" class="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-semibold bg-amber-100 text-amber-700">
+                                <i data-lucide="loader" class="w-3 h-3 mr-1 animate-spin"></i> Sync...
+                            </span>
+                        </div>
+                        <p id="school-name-display" class="text-xs text-slate-500 font-medium">Portal & Mading Digital Kelas</p>
+                    </div>
+                </div>
+
+                <!-- Clock & Admin Actions -->
+                <div class="flex items-center space-x-3">
+                    <div class="hidden md:flex flex-col text-right pr-3 border-r border-slate-200">
+                        <span id="live-time" class="text-sm font-bold text-slate-800">00:00:00</span>
+                        <span id="live-date" class="text-[11px] text-slate-500 font-medium">Hari, 00 Bulan 0000</span>
+                    </div>
+
+                    <!-- Admin Mode Toggle -->
+                    <button id="toggle-admin-btn" onclick="handleAdminToggle()" class="inline-flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 bg-brand-50 text-brand-700 hover:bg-brand-100 border border-brand-200 shadow-sm">
+                        <i data-lucide="lock" class="w-4 h-4 text-brand-600" id="mode-icon"></i>
+                        <span id="mode-text">Mode Pengurus</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        
+        <!-- Admin Banner & Action Bar -->
+        <div id="admin-banner" class="hidden mb-6 bg-gradient-to-r from-indigo-600 via-brand-600 to-purple-600 text-white p-4 rounded-2xl shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/20 p-2.5 rounded-xl backdrop-blur-sm">
+                    <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm sm:text-base">Mode Pengurus (Admin) Aktif</h3>
+                    <p class="text-xs text-indigo-100">Anda dapat mengubah identitas, pengurus, jadwal, tugas, dan PIN pengurus kelas.</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                <button onclick="openChangePinModal()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs px-3 py-2 rounded-xl transition font-semibold flex items-center space-x-1 shadow-sm">
+                    <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+                    <span>Ubah PIN Admin</span>
+                </button>
+                <button onclick="openIdentityModal()" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-2 rounded-xl transition font-semibold backdrop-blur-sm flex items-center space-x-1">
+                    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                    <span>Edit Profil Kelas</span>
+                </button>
+                <button onclick="handleAdminToggle()" class="bg-red-500/80 hover:bg-red-600 text-white text-xs px-3 py-2 rounded-xl transition font-semibold">
+                    Keluar
+                </button>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-3 sm:space-x-8 border-b border-slate-200/80 mb-6 overflow-x-auto no-scrollbar">
+            <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn tab-active pb-3 text-sm font-medium flex items-center space-x-2 whitespace-nowrap transition-colors">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span>Dashboard</span>
+            </button>
+            <button onclick="switchTab('jadwal')" id="tab-jadwal" class="tab-btn pb-3 text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center space-x-2 whitespace-nowrap transition-colors">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                <span>Jadwal Pelajaran</span>
+            </button>
+            <button onclick="switchTab('organisasi')" id="tab-organisasi" class="tab-btn pb-3 text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center space-x-2 whitespace-nowrap transition-colors">
+                <i data-lucide="users" class="w-4 h-4"></i>
+                <span>Inti & Struktur Kelas</span>
+            </button>
+            <button onclick="switchTab('galeri')" id="tab-galeri" class="tab-btn pb-3 text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center space-x-2 whitespace-nowrap transition-colors">
+                <i data-lucide="image" class="w-4 h-4"></i>
+                <span>Galeri Foto</span>
+            </button>
+            <button onclick="switchTab('tugas')" id="tab-tugas" class="tab-btn pb-3 text-sm font-medium text-slate-500 hover:text-slate-700 flex items-center space-x-2 whitespace-nowrap transition-colors">
+                <i data-lucide="check-square" class="w-4 h-4"></i>
+                <span>Tugas & PR</span>
+            </button>
+        </nav>
+
+        <!-- TAB 1: DASHBOARD -->
+        <section id="sec-dashboard" class="space-y-6">
+            <!-- Hero Class Identity Banner & Announcement -->
+            <div id="hero-banner" class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[220px] bg-cover bg-center">
+                <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-[2px]"></div>
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 backdrop-blur-md">
+                            <i data-lucide="megaphone" class="w-3.5 h-3.5 mr-1.5"></i> Papan Pengumuman Utama
+                        </span>
+                        <button onclick="openAnnouncementModal()" class="admin-only hidden text-slate-300 hover:text-white transition p-1.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md" title="Edit Pengumuman">
+                            <i data-lucide="edit-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <h2 id="announcement-title" class="text-xl sm:text-2xl font-extrabold tracking-tight mb-2">Memuat pengumuman...</h2>
+                    <p id="announcement-text" class="text-slate-200 text-sm leading-relaxed mb-6 max-w-3xl">Mengambil data terbaru dari Cloud...</p>
+                </div>
+                <div class="relative z-10 flex flex-wrap items-center justify-between pt-4 border-t border-white/10 text-xs text-slate-300 gap-2">
+                    <span id="announcement-author" class="flex items-center"><i data-lucide="user" class="w-3.5 h-3.5 mr-1"></i> Pengurus Kelas</span>
+                    <span id="slogan-display" class="italic text-indigo-200 font-medium">"Together We Achieve Success"</span>
+                </div>
+            </div>
+
+            <!-- Dashboard Overview Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Today Schedule Preview Card -->
+                <div class="lg:col-span-2 bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+                                <i data-lucide="clock" class="w-5 h-5 text-brand-600"></i>
+                                <span>Pelajaran Hari Ini</span>
+                            </h3>
+                            <span id="today-day-name" class="text-xs font-bold px-3 py-1 bg-brand-50 text-brand-700 rounded-lg border border-brand-100">Hari Ini</span>
+                        </div>
+                        <div id="today-schedule-list" class="space-y-3 max-h-64 overflow-y-auto pr-1">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                    <button onclick="switchTab('jadwal')" class="mt-4 w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl transition border border-slate-200 flex items-center justify-center space-x-1.5">
+                        <span>Lihat Semua Jadwal Pelajaran</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+
+                <!-- Class Officers Quick View -->
+                <div class="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-900 flex items-center space-x-2">
+                                <i data-lucide="shield" class="w-5 h-5 text-indigo-600"></i>
+                                <span>Inti Kelas</span>
+                            </h3>
+                            <button onclick="switchTab('organisasi')" class="text-xs text-brand-600 font-bold hover:underline">Detail</button>
+                        </div>
+                        <div id="quick-officers-list" class="space-y-3">
+                            <!-- Dynamic Officers Quick List -->
+                        </div>
+                    </div>
+                    <button onclick="openOfficerModal()" class="admin-only hidden mt-4 w-full py-2 bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold rounded-xl transition border border-brand-200 flex items-center justify-center space-x-1">
+                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                        <span>Tambah Pengurus Inti</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="book-open" class="w-6 h-6"></i></div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">Mata Pelajaran</p>
+                        <h4 id="stat-total-subject" class="text-lg font-extrabold text-slate-900">0 Mapel</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i data-lucide="clock-4" class="w-6 h-6"></i></div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">Tugas Belum Selesai</p>
+                        <h4 id="stat-pending-tasks" class="text-lg font-extrabold text-slate-900">0 Tugas</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-purple-50 text-purple-600 rounded-xl"><i data-lucide="camera" class="w-6 h-6"></i></div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">Koleksi Galeri</p>
+                        <h4 id="stat-gallery-count" class="text-lg font-extrabold text-slate-900">0 Foto</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
+                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i data-lucide="users" class="w-6 h-6"></i></div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-medium">Pengurus Inti</p>
+                        <h4 id="stat-officers-count" class="text-lg font-extrabold text-slate-900">0 Anggota</h4>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: JADWAL PELAJARAN -->
+        <section id="sec-jadwal" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Jadwal Pelajaran Kelas</h2>
+                    <p class="text-xs text-slate-500">Kelola dan lihat daftar mata pelajaran per hari.</p>
+                </div>
+                <button onclick="openScheduleModal()" class="admin-only hidden inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    <span>Tambah Jadwal Mapel</span>
+                </button>
+            </div>
+
+            <!-- Day Filter Tabs -->
+            <div class="flex space-x-2 overflow-x-auto pb-2 no-scrollbar">
+                <button onclick="filterDaySchedule('Senin')" class="day-tab-btn active-day px-4 py-2 rounded-xl text-xs font-bold transition border border-brand-600 bg-brand-600 text-white">Senin</button>
+                <button onclick="filterDaySchedule('Selasa')" class="day-tab-btn px-4 py-2 rounded-xl text-xs font-semibold transition border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">Selasa</button>
+                <button onclick="filterDaySchedule('Rabu')" class="day-tab-btn px-4 py-2 rounded-xl text-xs font-semibold transition border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">Rabu</button>
+                <button onclick="filterDaySchedule('Kamis')" class="day-tab-btn px-4 py-2 rounded-xl text-xs font-semibold transition border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">Kamis</button>
+                <button onclick="filterDaySchedule('Jumat')" class="day-tab-btn px-4 py-2 rounded-xl text-xs font-semibold transition border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">Jumat</button>
+                <button onclick="filterDaySchedule('Sabtu')" class="day-tab-btn px-4 py-2 rounded-xl text-xs font-semibold transition border border-slate-200 bg-white text-slate-600 hover:bg-slate-50">Sabtu</button>
+            </div>
+
+            <div id="schedule-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+
+        <!-- TAB 3: INTI & STRUKTUR ORGANISASI KELAS -->
+        <section id="sec-organisasi" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Struktur Pengurus & Inti Kelas</h2>
+                    <p class="text-xs text-slate-500">Daftar Wali Kelas, Pengurus Harian, dan Penanggung Jawab Seksi.</p>
+                </div>
+                <button onclick="openOfficerModal()" class="admin-only hidden inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span>Tambah Pengurus Inti</span>
+                </button>
+            </div>
+
+            <div id="officers-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                <!-- Dynamic Content -->
+            </div>
+        </section>
+
+        <!-- TAB 4: GALERI FOTO -->
+        <section id="sec-galeri" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Galeri & Dokumentasi Kelas</h2>
+                    <p class="text-xs text-slate-500">Momen kegiatan, prestasi, dan kebersamaan kelas.</p>
+                </div>
+                <button onclick="openGalleryModal()" class="admin-only hidden inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition">
+                    <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                    <span>Upload Foto Baru</span>
+                </button>
+            </div>
+
+            <div id="gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                <!-- Dynamically Populated -->
+            </div>
+        </section>
+
+        <!-- TAB 5: TUGAS / PR -->
+        <section id="sec-tugas" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Daftar Tugas & Pekerjaan Rumah</h2>
+                    <p class="text-xs text-slate-500">Catatan deadline pengumpulan tugas pelajaran.</p>
+                </div>
+                <button onclick="openTaskModal()" class="admin-only hidden inline-flex items-center space-x-2 bg-brand-600 hover:bg-brand-700 text-white px-4 py-2.5 rounded-xl text-xs font-semibold shadow-sm transition">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Tambah Tugas Baru</span>
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Status Tugas</span>
+                    <div class="flex space-x-2">
+                        <button onclick="filterTaskStatus('all')" id="task-filter-all" class="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-200 text-slate-800">Semua</button>
+                        <button onclick="filterTaskStatus('pending')" id="task-filter-pending" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200">Belum Selesai</button>
+                        <button onclick="filterTaskStatus('done')" id="task-filter-done" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200">Selesai</button>
+                    </div>
+                </div>
+                <div id="task-list" class="divide-y divide-slate-100">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- MODALS SECTION -->
+
+    <!-- 1. Admin PIN Verification Modal -->
+    <div id="admin-pin-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
+            <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="lock" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900">Masuk Mode Pengurus</h3>
+            <p class="text-xs text-slate-500 mb-4">Masukkan PIN pengurus kelas (Default: <span class="font-bold">1234</span>).</p>
+            <input type="password" id="admin-pin-input" maxlength="8" placeholder="Masukkan PIN" class="w-full text-center tracking-widest text-lg font-bold py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 mb-4">
+            <div class="flex space-x-2">
+                <button onclick="closeAdminPinModal()" class="w-1/2 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100">Batal</button>
+                <button onclick="submitAdminPin()" class="w-1/2 py-2.5 rounded-xl text-xs font-bold bg-brand-600 text-white hover:bg-brand-700">Verifikasi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Change PIN Modal -->
+    <div id="change-pin-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b pb-3">
+                <h3 class="text-base font-bold text-slate-900">Ubah PIN Admin</h3>
+                <button onclick="closeChangePinModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handlePinChangeSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">PIN Lama</label>
+                    <input type="password" id="old-pin-input" required placeholder="PIN saat ini" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">PIN Baru (4-8 Angka)</label>
+                    <input type="password" id="new-pin-input" minlength="4" maxlength="8" required placeholder="PIN Baru" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeChangePinModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-amber-600 text-white hover:bg-amber-700 shadow-sm">Simpan PIN Baru</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Edit Class Identity Modal -->
+    <div id="identity-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-5 border-b pb-3">
+                <h3 class="text-base font-bold text-slate-900">Edit Identitas & Tampilan Kelas</h3>
+                <button onclick="closeIdentityModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleIdentitySubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Kelas</label>
+                    <input type="text" id="id-classname-input" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Sekolah</label>
+                    <input type="text" id="id-school-input" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Slogan / Moto Kelas</label>
+                    <input type="text" id="id-slogan-input" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">URL Background Banner Hero (Opsional)</label>
+                    <input type="url" id="id-bg-input" placeholder="https://images.unsplash.com/..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeIdentityModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm">Simpan Identitas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. Class Officers (Inti Kelas) Modal -->
+    <div id="officer-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-5 border-b pb-3">
+                <h3 id="officer-modal-title" class="text-base font-bold text-slate-900">Kelola Pengurus Inti</h3>
+                <button onclick="closeOfficerModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleOfficerSubmit(event)" class="space-y-4">
+                <input type="hidden" id="off-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="off-name" required placeholder="Contoh: Bpk. Supriyadi / Rizky Ahmad" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Jabatan / Posisi</label>
+                    <input type="text" id="off-role" required placeholder="Contoh: Wali Kelas / Ketua Kelas / Sekretaris" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">URL Avatar / Foto Profil (Opsional)</label>
+                    <input type="url" id="off-avatar" placeholder="https://..." oninput="updateAvatarLivePreview(this.value)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <!-- Live Avatar Preview -->
+                <div class="flex items-center space-x-3 bg-slate-50 p-2.5 rounded-xl border">
+                    <img id="off-avatar-preview" src="https://placehold.co/100x100/e2e8f0/64748b?text=Profil" class="w-10 h-10 rounded-full object-cover">
+                    <span class="text-xs text-slate-500">Pratinjau Foto Profil</span>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeOfficerModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm">Simpan Pengurus</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5. Schedule Form Modal -->
+    <div id="schedule-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-5 border-b pb-3">
+                <h3 id="schedule-modal-title" class="text-base font-bold text-slate-900">Tambah Jadwal Pelajaran</h3>
+                <button onclick="closeScheduleModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleScheduleSubmit(event)" class="space-y-4">
+                <input type="hidden" id="sched-id">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mata Pelajaran</label>
+                    <input type="text" id="sched-subject" required placeholder="Contoh: Matematika Wajib" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Hari</label>
+                        <select id="sched-day" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="Senin">Senin</option>
+                            <option value="Selasa">Selasa</option>
+                            <option value="Rabu">Rabu</option>
+                            <option value="Kamis">Kamis</option>
+                            <option value="Jumat">Jumat</option>
+                            <option value="Sabtu">Sabtu</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Ruangan</label>
+                        <input type="text" id="sched-room" required placeholder="R. 201" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Jam Mulai</label>
+                        <input type="time" id="sched-start" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Jam Selesai</label>
+                        <input type="time" id="sched-end" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Guru Pengampu</label>
+                    <input type="text" id="sched-teacher" required placeholder="Nama Guru" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-4">
+                    <button type="button" onclick="closeScheduleModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm">Simpan Jadwal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 6. Gallery Upload Modal with Live Preview -->
+    <div id="gallery-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-5 border-b pb-3">
+                <h3 class="text-base font-bold text-slate-900">Upload Foto Kelas Baru</h3>
+                <button onclick="closeGalleryModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleGallerySubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Judul / Kegiatan Foto</label>
+                    <input type="text" id="gal-title" required placeholder="Contoh: Praktikum Biologi" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">URL Foto (Link Direct)</label>
+                    <input type="url" id="gal-url" required oninput="updateImageLivePreview(this.value)" placeholder="https://images.unsplash.com/..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="border rounded-2xl p-2 bg-slate-50 text-center">
+                    <p class="text-[11px] font-semibold text-slate-400 mb-1">Live Pratinjau Gambar</p>
+                    <img id="gal-preview" src="https://placehold.co/600x350/e2e8f0/64748b?text=Masukkan+URL+Foto" class="h-32 w-full object-cover rounded-xl border">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Keterangan Foto</label>
+                    <textarea id="gal-desc" rows="2" placeholder="Deskripsi singkat..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2">
+                    <button type="button" onclick="closeGalleryModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm">Simpan Foto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 7. Lightbox Image Preview Modal -->
+    <div id="preview-lightbox-modal" class="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md hidden flex-col justify-between p-4 sm:p-8">
+        <div class="flex justify-between items-center text-white z-10">
+            <div>
+                <h4 id="preview-title" class="text-base font-bold">Judul Foto</h4>
+                <p id="preview-desc" class="text-xs text-slate-300">Keterangan foto</p>
+            </div>
+            <button onclick="closeLightbox()" class="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        <div class="flex-grow flex items-center justify-center my-4 overflow-hidden">
+            <img id="preview-image" src="" alt="Preview Fullscreen" class="max-h-full max-w-full object-contain rounded-2xl shadow-2xl">
+        </div>
+        <div class="text-center text-xs text-slate-400">
+            Klik tombol X untuk menutup modal
+        </div>
+    </div>
+
+    <!-- 8. Task Form Modal -->
+    <div id="task-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-5 border-b pb-3">
+                <h3 class="text-base font-bold text-slate-900">Tambah Tugas / PR</h3>
+                <button onclick="closeTaskModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleTaskSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Tugas / Instruksi</label>
+                    <input type="text" id="task-title" required placeholder="Contoh: Kerjakan Hal. 54" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Mata Pelajaran</label>
+                        <input type="text" id="task-subject" required placeholder="Fisika" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Tenggat Waktu</label>
+                        <input type="date" id="task-deadline" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2 pt-4">
+                    <button type="button" onclick="closeTaskModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm">Simpan Tugas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 9. Announcement Modal -->
+    <div id="announcement-modal" class="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex justify-between items-center mb-5 border-b pb-3">
+                <h3 class="text-base font-bold text-slate-900">Edit Pengumuman Kelas</h3>
+                <button onclick="closeAnnouncementModal()" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form onsubmit="handleAnnouncementSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Judul Pengumuman</label>
+                    <input type="text" id="ann-title-input" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Isi Pengumuman</label>
+                    <textarea id="ann-text-input" rows="3" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Pengirim / Pengurus</label>
+                    <input type="text" id="ann-author-input" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="flex justify-end space-x-2 pt-4">
+                    <button type="button" onclick="closeAnnouncementModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-sm">Update Cloud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FIREBASE & APPLICATION JAVASCRIPT -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Application Config & Global Environment Standard
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'class-portal-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            apiKey: "demo-key",
+            authDomain: "demo.firebaseapp.com",
+            projectId: "demo-project",
+            storageBucket: "demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Application Master State
+        let state = {
+            adminPin: '1234',
+            identity: {
+                className: 'Class 9E (IX-E)',
+                schoolName: 'SMP Negeri 1 Surabaya',
+                slogan: '"Bersama Meraih Prestasi dan Impian"',
+                heroBgUrl: ''
+            },
+            officers: [
+                { id: '1', name: 'Bpk. Supriyadi, M.Pd', role: 'Wali Kelas', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80' },
+                { id: '2', name: 'Muhammad Rizky', role: 'Ketua Kelas', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80' },
+                { id: '3', name: 'Siti Nurhaliza', role: 'Wakil Ketua Kelas', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80' },
+                { id: '4', name: 'Anisa Putri', role: 'Sekretaris 1', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80' },
+                { id: '5', name: 'Budi Santoso', role: 'Bendahara 1', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80' }
+            ],
+            schedules: [
+                { id: '1', day: 'Senin', subject: 'Matematika Wajib', room: 'R. 201', start: '07:30', end: '09:00', teacher: 'Bpk. Hendra S.Pd' },
+                { id: '2', day: 'Senin', subject: 'Bahasa Indonesia', room: 'R. 201', start: '09:15', end: '10:45', teacher: 'Ibu Ratna M.Pd' },
+                { id: '3', day: 'Selasa', subject: 'Fisika Dasar', room: 'Lab Fisika', start: '08:00', end: '10:00', teacher: 'Bpk. Ahmad M.Si' }
+            ],
+            gallery: [
+                { id: '1', title: 'Kerja Kelompok Fisika', url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80', desc: 'Diskusi bersama pengerjaan laporan praktikum.' },
+                { id: '2', title: 'Juara Lomba Kebersihan', url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80', desc: 'Foto bersama saat penerimaan piala.' }
+            ],
+            tasks: [
+                { id: '1', title: 'Laporan Praktikum Fisika Bab 2', subject: 'Fisika', deadline: '2026-10-15', done: false }
+            ],
+            announcement: {
+                title: 'Persiapan Ujian Tengah Semester',
+                text: 'Seluruh siswa diharapkan mengecek kelengkapan catatan dan jadwal pelajaran.',
+                author: 'Wali Kelas: Bpk. Supriyadi, M.Pd'
+            }
+        };
+
+        let isAdmin = false;
+        let activeFilterDay = 'Senin';
+        let activeTaskFilter = 'all';
+
+        async function initCloudSync() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'class_portal_data', 'main_data');
+
+                onSnapshot(docRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        if (data) {
+                            if (data.adminPin) state.adminPin = data.adminPin;
+                            if (data.identity) state.identity = data.identity;
+                            if (data.officers) state.officers = data.officers;
+                            if (data.schedules) state.schedules = data.schedules;
+                            if (data.gallery) state.gallery = data.gallery;
+                            if (data.tasks) state.tasks = data.tasks;
+                            if (data.announcement) state.announcement = data.announcement;
+                            renderAllUI();
+                        }
+                    } else {
+                        saveStateToCloud();
+                    }
+
+                    const statusBadge = document.getElementById('cloud-sync-status');
+                    statusBadge.className = "inline-flex items-center text-[10px] px-2 py-0.5 rounded-full font-semibold bg-emerald-100 text-emerald-700";
+                    statusBadge.innerHTML = `<i data-lucide="cloud-check" class="w-3 h-3 mr-1"></i> Cloud Terhubung`;
+                    lucide.createIcons();
+                }, (error) => {
+                    console.error("Firestore sync error:", error);
+                });
+            } catch (err) {
+                console.error("Auth error:", err);
+            }
+        }
+
+        async function saveStateToCloud() {
+            if (!auth.currentUser) return;
+            try {
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'class_portal_data', 'main_data');
+                await setDoc(docRef, state, { merge: true });
+            } catch (e) {
+                console.error("Error saving data:", e);
+            }
+        }
+
+        window.handleAdminToggle = function() {
+            if (isAdmin) {
+                isAdmin = false;
+                applyAdminState();
+            } else {
+                document.getElementById('admin-pin-modal').classList.remove('hidden');
+                document.getElementById('admin-pin-modal').classList.add('flex');
+            }
+        };
+
+        window.closeAdminPinModal = function() {
+            document.getElementById('admin-pin-modal').classList.add('hidden');
+            document.getElementById('admin-pin-modal').classList.remove('flex');
+        };
+
+        window.submitAdminPin = function() {
+            const pin = document.getElementById('admin-pin-input').value;
+            if (pin === state.adminPin) {
+                isAdmin = true;
+                applyAdminState();
+                closeAdminPinModal();
+                document.getElementById('admin-pin-input').value = '';
+            } else {
+                alert('PIN Salah! Silakan coba lagi.');
+            }
+        };
+
+        function applyAdminState() {
+            const modeText = document.getElementById('mode-text');
+            const modeIcon = document.getElementById('mode-icon');
+            const adminBanner = document.getElementById('admin-banner');
+            const adminElements = document.querySelectorAll('.admin-only');
+
+            if (isAdmin) {
+                modeText.innerText = 'Mode Pengurus (Aktif)';
+                modeIcon.setAttribute('data-lucide', 'unlock');
+                adminBanner.classList.remove('hidden');
+                adminElements.forEach(el => el.classList.remove('hidden'));
+            } else {
+                modeText.innerText = 'Mode Pengurus';
+                modeIcon.setAttribute('data-lucide', 'lock');
+                adminBanner.classList.add('hidden');
+                adminElements.forEach(el => el.classList.add('hidden'));
+            }
+            lucide.createIcons();
+        }
+
+        /* Change PIN Modal Handlers */
+        window.openChangePinModal = function() {
+            document.getElementById('old-pin-input').value = '';
+            document.getElementById('new-pin-input').value = '';
+            document.getElementById('change-pin-modal').classList.remove('hidden');
+            document.getElementById('change-pin-modal').classList.add('flex');
+        };
+
+        window.closeChangePinModal = function() {
+            document.getElementById('change-pin-modal').classList.add('hidden');
+            document.getElementById('change-pin-modal').classList.remove('flex');
+        };
+
+        window.handlePinChangeSubmit = function(e) {
+            e.preventDefault();
+            const oldPin = document.getElementById('old-pin-input').value;
+            const newPin = document.getElementById('new-pin-input').value;
+
+            if (oldPin !== state.adminPin) {
+                alert('PIN Lama tidak sesuai!');
+                return;
+            }
+
+            state.adminPin = newPin;
+            saveStateToCloud();
+            alert('PIN Pengurus berhasil diperbarui secara Cloud untuk semua perangkat!');
+            closeChangePinModal();
+        };
+
+        /* Edit Identity Modal Handlers */
+        window.openIdentityModal = function() {
+            document.getElementById('id-classname-input').value = state.identity.className;
+            document.getElementById('id-school-input').value = state.identity.schoolName;
+            document.getElementById('id-slogan-input').value = state.identity.slogan;
+            document.getElementById('id-bg-input').value = state.identity.heroBgUrl || '';
+            document.getElementById('identity-modal').classList.remove('hidden');
+            document.getElementById('identity-modal').classList.add('flex');
+        };
+
+        window.closeIdentityModal = function() {
+            document.getElementById('identity-modal').classList.add('hidden');
+            document.getElementById('identity-modal').classList.remove('flex');
+        };
+
+        window.handleIdentitySubmit = function(e) {
+            e.preventDefault();
+            state.identity = {
+                className: document.getElementById('id-classname-input').value,
+                schoolName: document.getElementById('id-school-input').value,
+                slogan: document.getElementById('id-slogan-input').value,
+                heroBgUrl: document.getElementById('id-bg-input').value
+            };
+            saveStateToCloud();
+            closeIdentityModal();
+        };
+
+        /* Navigation Logic */
+        window.switchTab = function(tabName) {
+            ['dashboard', 'jadwal', 'organisasi', 'galeri', 'tugas'].forEach(tab => {
+                const sec = document.getElementById(`sec-${tab}`);
+                const btn = document.getElementById(`tab-${tab}`);
+                if (tab === tabName) {
+                    sec.classList.remove('hidden');
+                    btn.classList.add('tab-active');
+                    btn.classList.remove('text-slate-500');
+                } else {
+                    sec.classList.add('hidden');
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('text-slate-500');
+                }
+            });
+        };
+
+        /* Render UI Engine */
+        function renderAllUI() {
+            renderIdentity();
+            renderAnnouncement();
+            renderQuickOfficers();
+            renderFullOfficers();
+            renderTodaySchedule();
+            renderScheduleGrid();
+            renderGalleryGrid();
+            renderTaskList();
+            updateStats();
+        }
+
+        function renderIdentity() {
+            document.getElementById('class-name-display').innerText = state.identity.className;
+            document.getElementById('school-name-display').innerText = state.identity.schoolName;
+            document.getElementById('slogan-display').innerText = state.identity.slogan;
+
+            const heroBanner = document.getElementById('hero-banner');
+            if (state.identity.heroBgUrl) {
+                heroBanner.style.backgroundImage = `url('${state.identity.heroBgUrl}')`;
+            } else {
+                heroBanner.style.backgroundImage = 'none';
+            }
+        }
+
+        function updateStats() {
+            const uniqueSubjects = new Set(state.schedules.map(s => s.subject.trim()));
+            document.getElementById('stat-total-subject').innerText = `${uniqueSubjects.size} Mapel`;
+            
+            const pending = state.tasks.filter(t => !t.done).length;
+            document.getElementById('stat-pending-tasks').innerText = `${pending} Tugas`;
+
+            document.getElementById('stat-gallery-count').innerText = `${state.gallery.length} Foto`;
+            document.getElementById('stat-officers-count').innerText = `${state.officers.length} Anggota`;
+        }
+
+        function renderAnnouncement() {
+            document.getElementById('announcement-title').innerText = state.announcement.title;
+            document.getElementById('announcement-text').innerText = state.announcement.text;
+            document.getElementById('announcement-author').innerHTML = `<i data-lucide="user" class="w-3.5 h-3.5 inline mr-1"></i> ${state.announcement.author}`;
+            lucide.createIcons();
+        }
+
+        function renderQuickOfficers() {
+            const container = document.getElementById('quick-officers-list');
+            const displayList = state.officers.slice(0, 4);
+
+            container.innerHTML = displayList.map(off => `
+                <div class="flex items-center space-x-3 p-2 rounded-xl bg-slate-50/80">
+                    <img src="${off.avatar || 'https://placehold.co/100x100/e2e8f0/64748b?text=Profil'}" class="w-9 h-9 rounded-full object-cover border" onerror="this.src='https://placehold.co/100x100/e2e8f0/64748b?text=Foto'">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-800">${off.name}</h4>
+                        <p class="text-[11px] text-brand-600 font-medium">${off.role}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderFullOfficers() {
+            const grid = document.getElementById('officers-grid');
+            if (state.officers.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-8 text-center text-slate-400 bg-white rounded-2xl">Belum ada data pengurus inti.</div>`;
+                return;
+            }
+
+            grid.innerHTML = state.officers.map(off => `
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm text-center relative group flex flex-col justify-between items-center">
+                    <div class="admin-only ${isAdmin ? '' : 'hidden'} absolute top-3 right-3 space-x-1">
+                        <button onclick="editOfficer('${off.id}')" class="p-1 text-slate-400 hover:text-brand-600"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                        <button onclick="deleteOfficer('${off.id}')" class="p-1 text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <img src="${off.avatar || 'https://placehold.co/100x100/e2e8f0/64748b?text=Foto'}" class="w-20 h-20 rounded-full object-cover border-2 border-brand-100 shadow-sm mb-3" onerror="this.src='https://placehold.co/100x100/e2e8f0/64748b?text=Foto'">
+                        <h4 class="font-bold text-sm text-slate-900 mb-1">${off.name}</h4>
+                        <span class="text-xs font-semibold px-2.5 py-0.5 bg-brand-50 text-brand-700 rounded-full border border-brand-100">${off.role}</span>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        window.openOfficerModal = function(editData = null) {
+            document.getElementById('off-id').value = '';
+            document.getElementById('off-name').value = '';
+            document.getElementById('off-role').value = '';
+            document.getElementById('off-avatar').value = '';
+            document.getElementById('off-avatar-preview').src = 'https://placehold.co/100x100/e2e8f0/64748b?text=Profil';
+
+            if (editData) {
+                document.getElementById('officer-modal-title').innerText = 'Edit Pengurus Inti';
+                document.getElementById('off-id').value = editData.id;
+                document.getElementById('off-name').value = editData.name;
+                document.getElementById('off-role').value = editData.role;
+                document.getElementById('off-avatar').value = editData.avatar || '';
+                document.getElementById('off-avatar-preview').src = editData.avatar || 'https://placehold.co/100x100/e2e8f0/64748b?text=Profil';
+            } else {
+                document.getElementById('officer-modal-title').innerText = 'Tambah Pengurus Inti';
+            }
+            document.getElementById('officer-modal').classList.remove('hidden');
+            document.getElementById('officer-modal').classList.add('flex');
+        };
+
+        window.closeOfficerModal = function() {
+            document.getElementById('officer-modal').classList.add('hidden');
+            document.getElementById('officer-modal').classList.remove('flex');
+        };
+
+        window.updateAvatarLivePreview = function(url) {
+            document.getElementById('off-avatar-preview').src = url || 'https://placehold.co/100x100/e2e8f0/64748b?text=Profil';
+        };
+
+        window.handleOfficerSubmit = function(e) {
+            e.preventDefault();
+            const id = document.getElementById('off-id').value || Date.now().toString();
+            const newOfficer = {
+                id,
+                name: document.getElementById('off-name').value,
+                role: document.getElementById('off-role').value,
+                avatar: document.getElementById('off-avatar').value
+            };
+
+            const idx = state.officers.findIndex(o => o.id === id);
+            if (idx >= 0) state.officers[idx] = newOfficer;
+            else state.officers.push(newOfficer);
+
+            saveStateToCloud();
+            closeOfficerModal();
+        };
+
+        window.editOfficer = function(id) {
+            const item = state.officers.find(o => o.id === id);
+            if (item) openOfficerModal(item);
+        };
+
+        window.deleteOfficer = function(id) {
+            state.officers = state.officers.filter(o => o.id !== id);
+            saveStateToCloud();
+        };
+
+        function renderTodaySchedule() {
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const todayName = days[new Date().getDay()];
+            document.getElementById('today-day-name').innerText = todayName;
+
+            const todayItems = state.schedules.filter(s => s.day.toLowerCase() === todayName.toLowerCase());
+            const container = document.getElementById('today-schedule-list');
+
+            if (todayItems.length === 0) {
+                container.innerHTML = `
+                    <div class="p-4 text-center text-slate-400 bg-slate-50 rounded-xl text-xs">
+                        Tidak ada jam pelajaran untuk hari ini 🎉
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = todayItems.map(item => `
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-800">${item.subject}</h4>
+                        <p class="text-[11px] text-slate-500">${item.teacher} • ${item.room}</p>
+                    </div>
+                    <span class="text-[10px] font-semibold bg-brand-50 text-brand-700 px-2 py-1 rounded-md border border-brand-100">
+                        ${item.start} - ${item.end}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        window.filterDaySchedule = function(day) {
+            activeFilterDay = day;
+            const buttons = document.querySelectorAll('.day-tab-btn');
+            buttons.forEach(btn => {
+                if (btn.innerText === day) {
+                    btn.className = 'day-tab-btn active-day px-4 py-2 rounded-xl text-xs font-bold transition border border-brand-600 bg-brand-600 text-white';
+                } else {
+                    btn.className = 'day-tab-btn px-4 py-2 rounded-xl text-xs font-semibold transition border border-slate-200 bg-white text-slate-600 hover:bg-slate-50';
+                }
+            });
+            renderScheduleGrid();
+        };
+
+        function renderScheduleGrid() {
+            const filtered = state.schedules.filter(s => s.day === activeFilterDay);
+            const grid = document.getElementById('schedule-cards-grid');
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full p-8 text-center bg-white rounded-2xl border border-slate-200 text-slate-400">
+                        <i data-lucide="calendar-off" class="w-8 h-8 mx-auto mb-2 opacity-60"></i>
+                        <p class="text-sm">Belum ada data jadwal pelajaran untuk hari <strong>${activeFilterDay}</strong></p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = filtered.map(item => `
+                <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold px-2.5 py-1 bg-brand-50 text-brand-700 rounded-lg border border-brand-100 flex items-center">
+                                <i data-lucide="clock" class="w-3 h-3 mr-1"></i> ${item.start} - ${item.end}
+                            </span>
+                            <div class="admin-only ${isAdmin ? '' : 'hidden'} space-x-1">
+                                <button onclick="editSchedule('${item.id}')" class="p-1 text-slate-400 hover:text-brand-600"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                <button onclick="deleteSchedule('${item.id}')" class="p-1 text-slate-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900 mb-1">${item.subject}</h3>
+                        <p class="text-xs text-slate-600 mb-3 flex items-center"><i data-lucide="user" class="w-3.5 h-3.5 mr-1 text-slate-400"></i> ${item.teacher}</p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Ruangan:</span>
+                        <span class="font-semibold text-slate-700">${item.room}</span>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        /* Schedule Form Modal Handlers */
+        window.openScheduleModal = function(editData = null) {
+            document.getElementById('schedule-form').reset();
+            if (editData) {
+                document.getElementById('schedule-modal-title').innerText = 'Edit Jadwal Pelajaran';
+                document.getElementById('sched-id').value = editData.id;
+                document.getElementById('sched-subject').value = editData.subject;
+                document.getElementById('sched-day').value = editData.day;
+                document.getElementById('sched-room').value = editData.room;
+                document.getElementById('sched-start').value = editData.start;
+                document.getElementById('sched-end').value = editData.end;
+                document.getElementById('sched-teacher').value = editData.teacher;
+            } else {
+                document.getElementById('schedule-modal-title').innerText = 'Tambah Jadwal Pelajaran';
+                document.getElementById('sched-id').value = '';
+                document.getElementById('sched-day').value = activeFilterDay;
+            }
+            document.getElementById('schedule-modal').classList.remove('hidden');
+            document.getElementById('schedule-modal').classList.add('flex');
+        };
+
+        window.closeScheduleModal = function() {
+            document.getElementById('schedule-modal').classList.add('hidden');
+            document.getElementById('schedule-modal').classList.remove('flex');
+        };
+
+        window.handleScheduleSubmit = function(e) {
+            e.preventDefault();
+            const id = document.getElementById('sched-id').value || Date.now().toString();
+            const newItem = {
+                id,
+                subject: document.getElementById('sched-subject').value,
+                day: document.getElementById('sched-day').value,
+                room: document.getElementById('sched-room').value,
+                start: document.getElementById('sched-start').value,
+                end: document.getElementById('sched-end').value,
+                teacher: document.getElementById('sched-teacher').value
+            };
+
+            const index = state.schedules.findIndex(s => s.id === id);
+            if (index >= 0) state.schedules[index] = newItem;
+            else state.schedules.push(newItem);
+
+            saveStateToCloud();
+            closeScheduleModal();
+        };
+
+        window.editSchedule = function(id) {
+            const item = state.schedules.find(s => s.id === id);
+            if (item) openScheduleModal(item);
+        };
+
+        window.deleteSchedule = function(id) {
+            state.schedules = state.schedules.filter(s => s.id !== id);
+            saveStateToCloud();
+        };
+
+        /* Gallery Grid & Handlers */
+        function renderGalleryGrid() {
+            const grid = document.getElementById('gallery-grid');
+            if (state.gallery.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-8 text-center text-slate-400 bg-white rounded-2xl">Galeri foto kelas masih kosong.</div>`;
+                return;
+            }
+
+            grid.innerHTML = state.gallery.map(item => `
+                <div class="group relative bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-lg transition">
+                    <div class="aspect-video w-full overflow-hidden bg-slate-100 cursor-pointer" onclick="openLightbox('${item.url}', '${item.title.replace(/'/g, "\\'")}', '${item.desc.replace(/'/g, "\\'")}')">
+                        <img src="${item.url}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/600x400/e2e8f0/64748b?text=Gambar+Gagal+Dimuat'">
+                    </div>
+                    <div class="p-4">
+                        <h4 class="font-bold text-slate-800 text-sm truncate">${item.title}</h4>
+                        <p class="text-xs text-slate-500 line-clamp-2 mt-1">${item.desc || 'Tanpa keterangan'}</p>
+                    </div>
+                    <button onclick="deleteGalleryItem('${item.id}')" class="admin-only ${isAdmin ? '' : 'hidden'} absolute top-2 right-2 p-1.5 bg-red-600/90 text-white rounded-lg opacity-0 group-hover:opacity-100 transition shadow-md" title="Hapus Foto">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        window.openGalleryModal = function() {
+            document.getElementById('gallery-form').reset();
+            document.getElementById('gal-preview').src = 'https://placehold.co/600x350/e2e8f0/64748b?text=Masukkan+URL+Foto';
+            document.getElementById('gallery-modal').classList.remove('hidden');
+            document.getElementById('gallery-modal').classList.add('flex');
+        };
+
+        window.closeGalleryModal = function() {
+            document.getElementById('gallery-modal').classList.add('hidden');
+            document.getElementById('gallery-modal').classList.remove('flex');
+        };
+
+        window.updateImageLivePreview = function(url) {
+            document.getElementById('gal-preview').src = url || 'https://placehold.co/600x350/e2e8f0/64748b?text=Masukkan+URL+Foto';
+        };
+
+        window.handleGallerySubmit = function(e) {
+            e.preventDefault();
+            const newItem = {
+                id: Date.now().toString(),
+                title: document.getElementById('gal-title').value,
+                url: document.getElementById('gal-url').value,
+                desc: document.getElementById('gal-desc').value
+            };
+            state.gallery.unshift(newItem);
+            saveStateToCloud();
+            closeGalleryModal();
+        };
+
+        window.deleteGalleryItem = function(id) {
+            state.gallery = state.gallery.filter(g => g.id !== id);
+            saveStateToCloud();
+        };
+
+        window.openLightbox = function(url, title, desc) {
+            document.getElementById('preview-image').src = url;
+            document.getElementById('preview-title').innerText = title;
+            document.getElementById('preview-desc').innerText = desc;
+            document.getElementById('preview-lightbox-modal').classList.remove('hidden');
+            document.getElementById('preview-lightbox-modal').classList.add('flex');
+        };
+
+        window.closeLightbox = function() {
+            document.getElementById('preview-lightbox-modal').classList.add('hidden');
+            document.getElementById('preview-lightbox-modal').classList.remove('flex');
+        };
+
+        /* Tasks Engine */
+        window.filterTaskStatus = function(status) {
+            activeTaskFilter = status;
+            ['all', 'pending', 'done'].forEach(st => {
+                const btn = document.getElementById(`task-filter-${st}`);
+                if (st === status) btn.className = 'px-3 py-1 rounded-lg text-xs font-semibold bg-slate-200 text-slate-800';
+                else btn.className = 'px-3 py-1 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-200';
+            });
+            renderTaskList();
+        };
+
+        function renderTaskList() {
+            let filtered = state.tasks;
+            if (activeTaskFilter === 'pending') filtered = state.tasks.filter(t => !t.done);
+            if (activeTaskFilter === 'done') filtered = state.tasks.filter(t => t.done);
+
+            const container = document.getElementById('task-list');
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-400 text-sm">Tidak ada tugas ditemukan.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => `
+                <div class="p-4 flex items-center justify-between hover:bg-slate-50/80 transition">
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTaskDone('${item.id}')" class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500 cursor-pointer">
+                        <div>
+                            <p class="text-sm font-bold ${item.done ? 'line-through text-slate-400' : 'text-slate-800'}">${item.title}</p>
+                            <p class="text-xs text-slate-500">${item.subject} • Tenggat: <span class="font-medium text-amber-600">${item.deadline}</span></p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[11px] px-2.5 py-1 rounded-full font-semibold ${item.done ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                            ${item.done ? 'Selesai' : 'Belum Selesai'}
+                        </span>
+                        <button onclick="deleteTask('${item.id}')" class="admin-only ${isAdmin ? '' : 'hidden'} text-slate-400 hover:text-red-600 p-1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        window.openTaskModal = function() {
+            document.getElementById('task-form').reset();
+            document.getElementById('task-modal').classList.remove('hidden');
+            document.getElementById('task-modal').classList.add('flex');
+        };
+
+        window.closeTaskModal = function() {
+            document.getElementById('task-modal').classList.add('hidden');
+            document.getElementById('task-modal').classList.remove('flex');
+        };
+
+        window.handleTaskSubmit = function(e) {
+            e.preventDefault();
+            const newTask = {
+                id: Date.now().toString(),
+                title: document.getElementById('task-title').value,
+                subject: document.getElementById('task-subject').value,
+                deadline: document.getElementById('task-deadline').value,
+                done: false
+            };
+            state.tasks.unshift(newTask);
+            saveStateToCloud();
+            closeTaskModal();
+        };
+
+        window.toggleTaskDone = function(id) {
+            const task = state.tasks.find(t => t.id === id);
+            if (task) {
+                task.done = !task.done;
+                saveStateToCloud();
+            }
+        };
+
+        window.deleteTask = function(id) {
+            state.tasks = state.tasks.filter(t => t.id !== id);
+            saveStateToCloud();
+        };
+
+        /* Announcement Modal Handlers */
+        window.openAnnouncementModal = function() {
+            document.getElementById('ann-title-input').value = state.announcement.title;
+            document.getElementById('ann-text-input').value = state.announcement.text;
+            document.getElementById('ann-author-input').value = state.announcement.author;
+            document.getElementById('announcement-modal').classList.remove('hidden');
+            document.getElementById('announcement-modal').classList.add('flex');
+        };
+
+        window.closeAnnouncementModal = function() {
+            document.getElementById('announcement-modal').classList.add('hidden');
+            document.getElementById('announcement-modal').classList.remove('flex');
+        };
+
+        window.handleAnnouncementSubmit = function(e) {
+            e.preventDefault();
+            state.announcement = {
+                title: document.getElementById('ann-title-input').value,
+                text: document.getElementById('ann-text-input').value,
+                author: document.getElementById('ann-author-input').value
+            };
+            saveStateToCloud();
+            closeAnnouncementModal();
+        };
+
+        // Live Clock Loop
+        function initClock() {
+            const updateTime = () => {
+                const now = new Date();
+                document.getElementById('live-time').innerText = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                document.getElementById('live-date').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            };
+            updateTime();
+            setInterval(updateTime, 1000);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initClock();
+            initCloudSync();
+        });
+    </script>
+</body>
+</html>
